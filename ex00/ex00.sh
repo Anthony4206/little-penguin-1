@@ -1,4 +1,4 @@
-git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 cd linux/
 git checkout master
 git pull
