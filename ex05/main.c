@@ -7,16 +7,31 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("alevasse");
 MODULE_DESCRIPTION("Misc Driver!");
 
-static ssize_t
-ft_write(struct file *f, char __user *b, size_t c, loff_t *o)
-{
-	char	*login = "alevasse";
-	int	len = 8;
+static char *login = "alevasse";
+#define LOGIN_LEN 8
 
-	if (*buf == "alevasse") {
+static ssize_t
+ft_write(struct file *f, char __user *buf, size_t c, loff_t *o)
+{
+	char kbuf[LOGIN_LEN + 1] = {0};
 	
+	if (c != LOGIN_LEN) {
+		printk(KERN_ERR "Error: Bad length!\n");
+		return -EINVAL;
 	}
+	if (copy_from_user(kbuf, buf, LOGIN_LEN)) {
+		printk(KERN_ERR "Error: Copy from user failed!\n");
+		return -EFAULT;
+	}
+	if (strncmp(&buf, login, LOGIN_LEN)) {
+		printk(KERN_INFO "Success: Right data received from user!\n");
+		return LOGIN_LEN;	
+	}
+	printk(KERN_ERR "Error: Bad login name!\n");
+	return -EINVAL;
 }
+
+
 
 static ssize_t
 ft_read(struct file *f, const char __user *b, size_t c, loff_t *o)
