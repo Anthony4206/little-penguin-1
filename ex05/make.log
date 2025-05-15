@@ -5,39 +5,8 @@ make[1]: Leaving directory '/usr/src/kernel-4.18.5'
 make -C /lib/modules/4.18.5-alevasse/build M=/root/intra/ex05 modules
 make[1]: Entering directory '/usr/src/kernel-4.18.5'
   CC [M]  /root/intra/ex05/main.o
-/root/intra/ex05/main.c: In function ‘ft_read’:
-/root/intra/ex05/main.c:44:1: warning: no return statement in function returning non-void [-Wreturn-type]
- }
- ^
-/root/intra/ex05/main.c: At top level:
-/root/intra/ex05/main.c:48:11: error: initialization of ‘ssize_t (*)(struct file *, const char *, size_t,  loff_t *)’ {aka ‘long int (*)(struct file *, const char *, long unsigned int,  long long int *)’} from incompatible pointer type ‘ssize_t (*)(struct file *, char *, size_t,  loff_t *)’ {aka ‘long int (*)(struct file *, char *, long unsigned int,  long long int *)’} [-Werror=incompatible-pointer-types]
-  .write = ft_write,
-           ^~~~~~~~
-/root/intra/ex05/main.c:48:11: note: (near initialization for ‘s_fops.write’)
-/root/intra/ex05/main.c:49:10: error: initialization of ‘ssize_t (*)(struct file *, char *, size_t,  loff_t *)’ {aka ‘long int (*)(struct file *, char *, long unsigned int,  long long int *)’} from incompatible pointer type ‘ssize_t (*)(struct file *, const char *, size_t,  loff_t *)’ {aka ‘long int (*)(struct file *, const char *, long unsigned int,  long long int *)’} [-Werror=incompatible-pointer-types]
-  .read = ft_read
-          ^~~~~~~
-/root/intra/ex05/main.c:49:10: note: (near initialization for ‘s_fops.read’)
-/root/intra/ex05/main.c:51:1: error: expected ‘,’ or ‘;’ before ‘static’
- static struct miscdevice s_misc_device = {
- ^~~~~~
-/root/intra/ex05/main.c: In function ‘misc_init’:
-/root/intra/ex05/main.c:61:25: error: ‘s_misc_device’ undeclared (first use in this function); did you mean ‘miscdevice’?
-  error = misc_register(&s_misc_device);
-                         ^~~~~~~~~~~~~
-                         miscdevice
-/root/intra/ex05/main.c:61:25: note: each undeclared identifier is reported only once for each function it appears in
-/root/intra/ex05/main.c: In function ‘misc_exit’:
-/root/intra/ex05/main.c:72:19: error: ‘s_misc_device’ undeclared (first use in this function); did you mean ‘miscdevice’?
-  misc_deregister(&s_misc_device);
-                   ^~~~~~~~~~~~~
-                   miscdevice
-At top level:
-/root/intra/ex05/main.c:46:31: warning: ‘s_fops’ defined but not used [-Wunused-variable]
- static struct file_operations s_fops = {
-                               ^~~~~~
-cc1: some warnings being treated as errors
-make[2]: *** [scripts/Makefile.build:324: /root/intra/ex05/main.o] Error 1
-make[1]: *** [Makefile:1500: _module_/root/intra/ex05] Error 2
+  Building modules, stage 2.
+  MODPOST 1 modules
+  CC      /root/intra/ex05/main.mod.o
+  LD [M]  /root/intra/ex05/main.ko
 make[1]: Leaving directory '/usr/src/kernel-4.18.5'
-make: *** [Makefile:4: all] Error 2

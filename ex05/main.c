@@ -1,6 +1,9 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/init.h>
+#include <linux/fs.h>
+#include <linux/device.h>
+#include <linux/uaccess.h>
 #include <linux/miscdevice.h>
 
 MODULE_LICENSE("GPL");
@@ -11,11 +14,11 @@ static char *login = "alevasse";
 #define LOGIN_LEN 8
 
 static ssize_t
-ft_write(struct file *f, char __user *buf, size_t c, loff_t *o)
+ft_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
 {
 	char kbuf[LOGIN_LEN + 1] = {0};
 	
-	if (c != LOGIN_LEN) {
+	if (count != LOGIN_LEN) {
 		printk(KERN_ERR "Error: Bad length!\n");
 		return -EINVAL;
 	}
@@ -23,7 +26,7 @@ ft_write(struct file *f, char __user *buf, size_t c, loff_t *o)
 		printk(KERN_ERR "Error: Copy from user failed!\n");
 		return -EFAULT;
 	}
-	if (strncmp(&buf, login, LOGIN_LEN)) {
+	if (strncmp(kbuf, login, LOGIN_LEN) == 0) {
 		printk(KERN_INFO "Success: Right data received from user!\n");
 		return LOGIN_LEN;	
 	}
@@ -31,24 +34,35 @@ ft_write(struct file *f, char __user *buf, size_t c, loff_t *o)
 	return -EINVAL;
 }
 
-
-
 static ssize_t
-ft_read(struct file *f, const char __user *b, size_t c, loff_t *o)
+ft_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
 {
-	char	*login = "alevasse";
-	int	len = 
+	if (*ppos > 0) {
+		printk(KERN_ERR "Error: EOF reached!\n");
+		return 0;
+	}
+	if (count < LONGIN_LEN) {
+		printk(KERN_ERR "Error: Count to small!\n");
+		return -EINVAL;
+	}
+	if (copy_to_user(buf, login, LOGIN_LEN)) {
+		printk(KERN_ERR "Error: Copy to user failed!\n");
+		return -EFAULT;
+	}
+	printk(KERN_INFO "Success: Login copied to user buffer!\n");
+	return LOGIN_LEN;
 }
 
 static struct file_operations	s_fops = {
 	.owner	= THIS_MODULE,
 	.write	= ft_write,
 	.read	= ft_read
-}
+};
+
 static struct miscdevice	s_misc_device = {
 	.minor	= MISC_DYNAMIC_MINOR,
 	.name	= "fortytwo",
-	.fops	= &fops
+	.fops	= &s_fops
 };
 
 static int	__init misc_init(void)
