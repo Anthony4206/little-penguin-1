@@ -1,89 +1,55 @@
-#include <linux/kernel.h>
 #include <linux/module.h>
-#include <linux/init.h>
-#include <linux/fs.h>
-#include <linux/device.h>
-#include <linux/uaccess.h>
-#include <linux/miscdevilinux/debugfs.hce.h>
 #include <linux/debugfs.h>
 
-MODULE_LICENSE("GPL");
 MODULE_AUTHOR("alevasse");
-MODULE_DESCRIPTION("Misc Driver!");
+MODULE_DESCRIPTION("Debugfs user/kernel interface!");
+MODULE_LICENSE("GPL");
 
-static char *login = "alevasse";
-#define LOGIN_LEN 8
+extern const struct file_operations s_fops_id;
+extern const struct file_operations s_fops_jiffies;
+extern const struct file_operations s_fops_foo;
 
-static ssize_t
-ft_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
+static struct dentry	*dir;
+
+static int	__init debugfs_init(void)
 {
-	char kbuf[LOGIN_LEN + 1] = {0};
+	static struct dentry     *file_id;
+	static struct dentry     *file_jiffies;
+	static struct dentry     *file_foo;
+
+	dir = debugfs_create_dir("fortytwo", NULL);
+	if (!dir) {
+		printk(KERN_ERR "debugfs not available or failed!\n");
+		return -ENODEV;
+	}
+	printk(KERN_INFO "Success: Debugfs device has been registered!\n");
 	
-	if (count != LOGIN_LEN) {
-		printk(KERN_ERR "Error: Bad length!\n");
-		return -EINVAL;
-	}
-	if (copy_from_user(kbuf, buf, LOGIN_LEN)) {
-		printk(KERN_ERR "Error: Copy from user failed!\n");
-		return -EFAULT;
-	}
-	if (strncmp(kbuf, login, LOGIN_LEN) == 0) {
-		printk(KERN_INFO "Success: Right data received from user!\n");
-		return LOGIN_LEN;	
-	}
-	printk(KERN_ERR "Error: Bad login name!\n");
-	return -EINVAL;
-}
-
-static ssize_t
-ft_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
-{
-	if (*ppos > 0) {
-		printk(KERN_ERR "Error: EOF reached!\n");
-		return 0;
-	}
-	if (count < LONGIN_LEN) {
-		printk(KERN_ERR "Error: Count to small!\n");
-		return -EINVAL;
-	}
-	if (copy_to_user(buf, login, LOGIN_LEN)) {
-		printk(KERN_ERR "Error: Copy to user failed!\n");
-		return -EFAULT;
-	}
-	printk(KERN_INFO "Success: Login copied to user buffer!\n");
-	return LOGIN_LEN;
-}
-
-static struct file_operations	s_fops = {
-	.owner	= THIS_MODULE,
-	.write	= ft_write,
-	.read	= ft_read
-};
-
-static struct miscdevice	s_misc_device = {
-	.minor	= MISC_DYNAMIC_MINOR,
-	.name	= "fortytwo",
-	.fops	= &s_fops
-};
-
-static int	__init misc_init(void)
-{
-	int error;
-
-	error = misc_register(&s_misc_device);
-	if (error) {
-		printk(KERN_ERR "Misc device register failed!\n");
-		return error;
-	}
-	printk(KERN_INFO "Success: Misc device has been registered!\n");
+	file_id = debugfs_create_file("id", 0666, dir, NULL, &s_fops_id);
+	if (!file_id)
+		goto fail;
+	
+	file_jiffies = debugfs_create_file("jiffies", 0444, dir,
+					   NULL, &s_fops_jiffies);
+	if (!file_jiffies)
+		goto fail;
+	
+	file_foo = debugfs_create_file("foo", 0644, dir, NULL, &s_fops_foo);
+	if (!file_foo)
+		goto fail;
+	printk(KERN_INFO "Success: All files have been created!\n");
 	return 0;
+
+fail:
+	debugfs_remove_recursive(dir);
+	printk(KERN_ERR "A debugfs_create_file failed!\n");
+	return -1;
 }
 
-static void      __exit misc_exit(void)
+static void      __exit debugfs_exit(void)
 {
-	misc_deregister(&s_misc_device);
-        printk(KERN_INFO "Misc device has been deregistered!\n");
+        debugfs_remove_recursive(dir);
+        printk(KERN_INFO "Debugfs device has been deregistered!\n");
 }
 
-module_init(misc_init);
-module_exit(misc_exit);
+module_init(debugfs_init);
+module_exit(debugfs_exit);
