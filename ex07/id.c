@@ -18,7 +18,7 @@ id_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
 		return -EFAULT;
 	}
 	if (strncmp(kbuf, login, LOGIN_LEN) == 0) {
-		printk(KERN_INFO "Success: Right data received from user!\n");
+		pr_info("Success: Right data received from user!\n");
 		return count;	
 	}
 	printk(KERN_ERR "Error: Bad login name!\n");
@@ -40,6 +40,7 @@ id_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
 		printk(KERN_ERR "Error: Copy to user failed!\n");
 		return -EFAULT;
 	}
+	*ppos += LOGIN_LEN;
 	printk(KERN_INFO "Success: Login copied to user buffer!\n");
 	return LOGIN_LEN;
 }
