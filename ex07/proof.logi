@@ -1,0 +1,4 @@
+Tue Jun  3 21:15:06 CEST 2025
+Test mutex
+[  146.915431] Success: foo_data copied to user buffer!
+Tue Jun  3 21:15:08 CEST 2025

@@ -3,6 +3,7 @@
 #include <linux/uaccess.h>
 #include <linux/mutex.h>
 #include <linux/capability.h>
+#include <linux/delay.h>
 
 static char	foo_data[PAGE_SIZE];
 static size_t	foo_len;
@@ -29,6 +30,7 @@ foo_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
 		return -EINVAL;
 
 	mutex_lock(&foo_lock);
+	msleep(3000);
 	memset(foo_data, 0, PAGE_SIZE);
 
 	if (copy_from_user(foo_data, buf, count)) {

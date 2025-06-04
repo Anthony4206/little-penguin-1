@@ -1,11 +1,21 @@
-[ 1922.144607] Success: All files have been created!
-[ 1922.145275] Error: Bad length!
-[ 1922.145275] Error: Bad login name!
-[ 1922.145275] Success: Right data received from user!
+[ 4400.164578] Success: Debugfs device has been registered!
+[ 4400.164585] Success: All files have been created!
+[ 4400.165634] Error: Bad length!
+[ 4400.165737] Error: Bad login name!
+[ 4400.165787] Success: Right data received from user!
 ft_read: alevasse
-Jiffies value: 4296589450
-[ 1922.151175] Error: EOF reached!
-[ 1922.153104] Error: Count to small!
-[ 1922.154158] Jiffies has been called!
-[ 1922.154158] Jiffies has been called!
-[ 1922.154158] Debugfs device has been deregistered!
+[ 4400.171598] Error: Count to small!
+Jiffies value: 4299067472
+[ 4400.176681] Jiffies has been called!
+User root is writing hello in foo: hello
+[ 4403.233080] Success: foo_data received from root!
+[ 4403.234312] Success: foo_data copied to user buffer!
+[ 4403.234337] Success: foo_data copied to user buffer!
+Start test mutex:
+Tue Jun  3 21:15:06 CEST 2025
+Test mutex
+[  146.915431] Success: foo_data copied to user buffer!
+Tue Jun  3 21:15:08 CEST 2025
+alevasse is trying to write something in foo...
+bash: line 0: echo: write error: Permission denied
+[ 4411.352465] Debugfs device has been deregistered!
