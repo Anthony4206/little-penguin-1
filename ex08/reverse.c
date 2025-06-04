@@ -11,21 +11,17 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Anthony Levasseur <anthony@ne02ptzero.me>");
 MODULE_DESCRIPTION("Reverse string module");
 
-#define DEVICE_NAME "reverse"
-
 static char str[PAGE_SIZE];
 
-static ssize_t myfd_read(struct file *file, char __user *user_buf,
-			 size_t count, loff_t *ppos)
+ssize_t myfd_read(struct file *fp, char __user *user,
+		  size_t size, loff_t *offs)
 {
-	size_t len = strlen(str);
+	size_t t;
 	size_t i;
-	char *tmp;
+	char *tmp2;
 
-	if (*ppos != 0)
-		return 0;
-
-	tmp = kmalloc(len + 1, GFP_KERNEL);
+	// Malloc like a boss
+	tmp2 = kmalloc(sizeof(char), GFP_KERNEL);
 	if (!tmp)
 		return -ENOMEM;
 
@@ -43,55 +39,42 @@ static ssize_t myfd_read(struct file *file, char __user *user_buf,
 	return len;
 }
 
-static ssize_t myfd_write(struct file *file, const char __user *user_buf,
-			  size_t count, loff_t *ppos)
+ssize_t myfd_write(struct file *fp, const char __user *user,
+		   size_t size, loff_t *ppos)
 {
-	ssize_t ret;
+	ssize_t res;
 
-	if (count >= PAGE_SIZE)
-		return -EINVAL;
-
-	memset(str, 0, sizeof(str));
-
-	ret = simple_write_to_buffer(str, PAGE_SIZE - 1, ppos, user_buf, count);
-	if (ret < 0)
-		return ret;
-
-	str[ret] = '\0';
-	return ret;
+	res = 0;
+	res = simple_write_to_buffer(str, size, offs, user, size) + 1;
+	// 0x0 = '\0'
+	str[size + 1] = 0x0;
+	return res;
 }
 
 static const struct file_operations myfd_fops = {
 	.owner = THIS_MODULE,
 	.read = myfd_read,
-	.write = myfd_write,
+	.write = myfd_write
 };
 
 static struct miscdevice myfd_device = {
 	.minor = MISC_DYNAMIC_MINOR,
-	.name = DEVICE_NAME,
-	.fops = &myfd_fops,
+	.name = "reverse",
+	.fops = &myfd_fops
 };
 
 static int __init myfd_init(void)
 {
-	int ret;
+	int retval;
 
-	ret = misc_register(&myfd_device);
-	if (ret) {
-		pr_err("Failed to register misc device\n");
-		return ret;
-	}
-
-	pr_info("reverse module loaded\n");
-	return 0;
+	retval = misc_register(&myfd_device);
+	return retval;
 }
 
-static void __exit myfd_exit(void)
+static void __exit myfd_cleanup(void)
 {
 	misc_deregister(&myfd_device);
-	pr_info("reverse module unloaded\n");
 }
 
 module_init(myfd_init);
-module_exit(myfd_exit);
+module_exit(myfd_cleanup);
