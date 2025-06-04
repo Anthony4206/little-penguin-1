@@ -1,0 +1,1 @@
+cmd_/root/little-penguin-1/ex08/reverse.ko := ld -r -m elf_x86_64  -z max-page-size=0x200000 -T ./scripts/module-common.lds  --build-id  -o /root/little-penguin-1/ex08/reverse.ko /root/little-penguin-1/ex08/reverse.o /root/little-penguin-1/ex08/reverse.mod.o ;  true

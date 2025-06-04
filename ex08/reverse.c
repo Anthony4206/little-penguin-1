@@ -8,15 +8,15 @@
 #include <linux/uaccess.h>
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Louis Solofrizzo <louis@ne02ptzero.me>");
-MODULE_DESCRIPTION("Useless module");
+MODULE_AUTHOR("Anthony Levasseur <anthony@ne02ptzero.me>");
+MODULE_DESCRIPTION("Reverse string module");
 
 #define DEVICE_NAME "reverse"
 
 static char str[PAGE_SIZE];
 
 static ssize_t myfd_read(struct file *file, char __user *user_buf,
-                         size_t count, loff_t *ppos)
+			 size_t count, loff_t *ppos)
 {
 	size_t len = strlen(str);
 	size_t i;
@@ -44,7 +44,7 @@ static ssize_t myfd_read(struct file *file, char __user *user_buf,
 }
 
 static ssize_t myfd_write(struct file *file, const char __user *user_buf,
-                          size_t count, loff_t *ppos)
+			  size_t count, loff_t *ppos)
 {
 	ssize_t ret;
 
