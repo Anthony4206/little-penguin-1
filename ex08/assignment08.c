@@ -1,65 +1,97 @@
+// SPDX-License-Identifier: GPL-2.0
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/miscdevice.h>
 #include <linux/fs.h>
 #include <linux/slab.h>
-// Dont have a license, LOL
-MODULE_LICENSE("LICENSE");
+#include <linux/uaccess.h>
+
+MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Louis Solofrizzo <louis@ne02ptzero.me>");
 MODULE_DESCRIPTION("Useless module");
-static ssize_t myfd_read
-(struct file *fp, char __user *user,
-size_t size, loff_t *offs);
-static ssize_t myfd_write(struct file *fp, const char __user *user,
-size_t size, loff_t *offs);
-static struct file_operations myfd_fops = {
-.owner = THIS_MODULE, .read = &myfd_read, .write = &myfd_write
-};
-static struct miscdevice myfd_device = {
-.minor = MISC_DYNAMIC_MINOR,.name = "reverse",
-.fops = &myfd_fops };
-char str[PAGE_SIZE];
-char *tmp;
-static int __init myfd_init
-(void) {
-int retval;
-retval = misc_register(&(*(&(myfd_device))));
-return 1;
-}
-static void __exit myfd_cleanup
-(void) {
-}
-ssize_t myfd_read
-(struct file *fp,
-char __user *user,
-size_t size,
-loff_t *offs)
+
+#define DEVICE_NAME "reverse"
+
+static char str[PAGE_SIZE];
+
+static ssize_t myfd_read(struct file *file, char __user *user_buf,
+                         size_t count, loff_t *ppos)
 {
-size_t t, i;
-char *tmp2;
-/***************
-* Malloc like a boss
-***************/
-tmp2 = kmalloc(sizeof(char) * PAGE_SIZE * 2, GFP_KERNEL);
-tmp = tmp2;
-for (t = strlen(str) - 1, i = 0; t >= 0; t--, i++) {
-tmp[i] = str[t];
+	size_t len = strlen(str);
+	size_t i;
+	char *tmp;
+
+	if (*ppos != 0)
+		return 0;
+
+	tmp = kmalloc(len + 1, GFP_KERNEL);
+	if (!tmp)
+		return -ENOMEM;
+
+	for (i = 0; i < len; i++)
+		tmp[i] = str[len - i - 1];
+	tmp[i] = '\0';
+
+	if (copy_to_user(user_buf, tmp, len)) {
+		kfree(tmp);
+		return -EFAULT;
+	}
+
+	*ppos = len;
+	kfree(tmp);
+	return len;
 }
-tmp[i] = 0x0;
-return simple_read_from_buffer(user, size, offs, tmp, i);
+
+static ssize_t myfd_write(struct file *file, const char __user *user_buf,
+                          size_t count, loff_t *ppos)
+{
+	ssize_t ret;
+
+	if (count >= PAGE_SIZE)
+		return -EINVAL;
+
+	memset(str, 0, sizeof(str));
+
+	ret = simple_write_to_buffer(str, PAGE_SIZE - 1, ppos, user_buf, count);
+	if (ret < 0)
+		return ret;
+
+	str[ret] = '\0';
+	return ret;
 }
-ssize_t myfd_write
-(struct file *fp,
-const char __user *user,
-size_t size,
-loff_t *offs) {
-ssize_t res;
-res = 0;
-res = simple_write_to_buffer(str, size, offs, user, size) + 1;
-// 0x0 = ’\0’
-str[size + 1] = 0x0;
-return res;
+
+static const struct file_operations myfd_fops = {
+	.owner = THIS_MODULE,
+	.read = myfd_read,
+	.write = myfd_write,
+};
+
+static struct miscdevice myfd_device = {
+	.minor = MISC_DYNAMIC_MINOR,
+	.name = DEVICE_NAME,
+	.fops = &myfd_fops,
+};
+
+static int __init myfd_init(void)
+{
+	int ret;
+
+	ret = misc_register(&myfd_device);
+	if (ret) {
+		pr_err("Failed to register misc device\n");
+		return ret;
+	}
+
+	pr_info("reverse module loaded\n");
+	return 0;
 }
+
+static void __exit myfd_exit(void)
+{
+	misc_deregister(&myfd_device);
+	pr_info("reverse module unloaded\n");
+}
+
 module_init(myfd_init);
-module_exit(myfd_cleanup);
+module_exit(myfd_exit);
