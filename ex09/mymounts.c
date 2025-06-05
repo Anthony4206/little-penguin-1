@@ -16,7 +16,16 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("alevasse");
 MODULE_DESCRIPTION("Get My Mounts!");
 
-
+struct mount {
+	struct hlist_node mnt_hash;
+	struct mount *mnt_parent;
+	struct dentry *mnt_mountpoint;
+	struct vfsmount mnt;
+	struct list_head mnt_child;
+	struct list_head mnt_instance;
+	const char *mnt_devname;
+	struct list_head mnt_list;
+}
 
 static int      mymounts_show(struct seq_file *m, void *v)
 {
