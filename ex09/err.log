@@ -1,29 +1,28 @@
 make -C /lib/modules/4.18.5-alevasse/build M=/root/little-penguin-1/ex09 modules
 make[1]: Entering directory '/usr/src/kernel-4.18.5'
   CC [M]  /root/little-penguin-1/ex09/mymounts.o
-/root/little-penguin-1/ex09/mymounts.c:19:30: warning: ‘struct mount’ declared inside parameter list will not be visible outside of this definition or declaration
- static int show_mount(struct mount *mnt, void *arg)
-                              ^~~~~
-/root/little-penguin-1/ex09/mymounts.c: In function ‘show_mount’:
-/root/little-penguin-1/ex09/mymounts.c:23:14: error: dereferencing pointer to incomplete type ‘struct mount’
-   .mnt = &mnt->mnt,
-              ^~
+/root/little-penguin-1/ex09/mymounts.c:30:8: error: expected ‘;’, identifier or ‘(’ before ‘int’
+ static int      mymounts_show(struct seq_file *m, void *v)
+        ^~~
+In file included from ./include/linux/list.h:9,
+                 from ./include/linux/module.h:9,
+                 from /root/little-penguin-1/ex09/mymounts.c:2:
 /root/little-penguin-1/ex09/mymounts.c: In function ‘mymounts_show’:
-/root/little-penguin-1/ex09/mymounts.c:51:24: error: passing argument 1 of ‘iterate_mounts’ from incompatible pointer type [-Werror=incompatible-pointer-types]
-  return iterate_mounts(show_mount, m, ns);
-                        ^~~~~~~~~~
-In file included from /root/little-penguin-1/ex09/mymounts.c:3:
-./include/linux/fs.h:2204:27: note: expected ‘int (*)(struct vfsmount *, void *)’ but argument is of type ‘int (*)(struct mount *, void *)’
- extern int iterate_mounts(int (*)(struct vfsmount *, void *), void *,
-                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/root/little-penguin-1/ex09/mymounts.c:51:39: error: passing argument 3 of ‘iterate_mounts’ from incompatible pointer type [-Werror=incompatible-pointer-types]
-  return iterate_mounts(show_mount, m, ns);
-                                       ^~
-In file included from /root/little-penguin-1/ex09/mymounts.c:3:
-./include/linux/fs.h:2205:6: note: expected ‘struct vfsmount *’ but argument is of type ‘struct mnt_namespace *’
-      struct vfsmount *);
-      ^~~~~~~~~~~~~~~~~
-cc1: some warnings being treated as errors
+/root/little-penguin-1/ex09/mymounts.c:37:30: error: dereferencing pointer to incomplete type ‘struct mnt_namespace’
+  list_for_each_entry(mnt, &ns->list, mnt_list) {
+                              ^~
+./include/linux/kernel.h:963:26: note: in definition of macro ‘container_of’
+  void *__mptr = (void *)(ptr);     \
+                          ^~~
+./include/linux/list.h:377:2: note: in expansion of macro ‘list_entry’
+  list_entry((ptr)->next, type, member)
+  ^~~~~~~~~~
+./include/linux/list.h:464:13: note: in expansion of macro ‘list_first_entry’
+  for (pos = list_first_entry(head, typeof(*pos), member); \
+             ^~~~~~~~~~~~~~~~
+/root/little-penguin-1/ex09/mymounts.c:37:2: note: in expansion of macro ‘list_for_each_entry’
+  list_for_each_entry(mnt, &ns->list, mnt_list) {
+  ^~~~~~~~~~~~~~~~~~~
 make[2]: *** [scripts/Makefile.build:324: /root/little-penguin-1/ex09/mymounts.o] Error 1
 make[1]: *** [Makefile:1500: _module_/root/little-penguin-1/ex09] Error 2
 make[1]: Leaving directory '/usr/src/kernel-4.18.5'
