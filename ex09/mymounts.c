@@ -16,39 +16,40 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("alevasse");
 MODULE_DESCRIPTION("Get My Mounts!");
 
-static int show_mount(struct mount *mnt, void *arg)
+
+
+static int      mymounts_show(struct seq_file *m, void *v)
 {
-	struct seq_file *m = arg;
-	struct path mnt_path = {
-		.mnt = &mnt->mnt,
-		.dentry = mnt->mnt.mnt_root
-	};
-
-	char *buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
-	char *path;
-
-	if (!buf)
-		return -ENOMEM;
-
-	path = d_path(&mnt_path, buf, PAGE_SIZE);
-
-	seq_printf(m, "Mount entry:\n");
-	seq_printf(m, "  Devname: %s\n", mnt->mnt_devname);
-	seq_printf(m, "  Path   : %s\n", path);
-	seq_printf(m, "  Root dentry: %px\n", mnt->mnt.mnt_root);
-	seq_printf(m, "  Mount addr : %px\n", mnt);
-
-	kfree(buf);
-	return 0;
-}
-
-static int mymounts_show(struct seq_file *m, void *v)
-{
-	struct mnt_namespace *ns = current->nsproxy->mnt_ns;
+	struct mnt_namespace	*ns = current->nsproxy->mnt_ns;
+	struct mount		*mnt;
 
 	pr_info("Mount namespace: %px\n", ns);
 
-	return iterate_mounts(show_mount, m, ns);
+	list_for_each_entry(mnt, &ns->list, mnt_list) {
+		struct vfsmount	*vfsmnt = &mnt->mnt;
+		struct dentry	*root = vfsmnt->mnt_root;
+		struct path	mnt_path = {
+			.mnt = vfsmnt,
+			.dentry = root
+		};
+
+		char 	*buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
+		char	*path;
+
+		if (!buf)
+			return -ENOMEM;
+
+		path = d_path(&mnt_path, buf, PAGE_SIZE);
+
+		pr_info("Mount entry:\n");
+		pr_info("  Devname: %s\n", mnt->mnt_devname);
+		pr_info("  Path   : %s\n", path);
+		pr_info("  Root dentry: %px\n", root);
+		pr_info("  Mount addr : %px\n", mnt);
+
+		kfree(buf);
+	}
+	return 0;
 }
 
 static int	mymounts_open(struct inode *inode, struct file *file)
