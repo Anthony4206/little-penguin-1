@@ -62,15 +62,10 @@ ssize_t myfd_read(struct file *fp, char __user *user,
 	for (i = 0; i < len; i++)
 		tmp[i] = str[len - 1 - i];
 	tmp[i] = '\0';
-
-	if (simple_read_from_buffer(user, size, offs, tmp, i)) {
-		kfree(tmp);
-		return -EFAULT;
-	}
-
+	ret = simple_read_from_buffer(user, size, offs, tmp, i);
 	*offs = len;
 	kfree(tmp);
-	return len;
+	return ret;
 }
 
 ssize_t myfd_write(struct file *fp, const char __user *user,
