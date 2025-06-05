@@ -1,0 +1,1 @@
+cmd_/root/little-penguin-1/ex09/mymounts.ko := ld -r -m elf_x86_64  -z max-page-size=0x200000 -T ./scripts/module-common.lds  --build-id  -o /root/little-penguin-1/ex09/mymounts.ko /root/little-penguin-1/ex09/mymounts.o /root/little-penguin-1/ex09/mymounts.mod.o ;  true

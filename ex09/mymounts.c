@@ -3,7 +3,7 @@
 #include <linux/fs.h>
 #include <linux/init.h>
 #include <linux/slab.h>
-#include <linux/mount.h>
+#include <../fs/mount.h>
 #include <linux/nsproxy.h>
 #include <linux/dcache.h>
 #include <linux/proc_fs.h>
@@ -16,23 +16,11 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("alevasse");
 MODULE_DESCRIPTION("Get My Mounts!");
 
-struct mount {
-	struct hlist_node mnt_hash;
-	struct mount *mnt_parent;
-	struct dentry *mnt_mountpoint;
-	struct vfsmount mnt;
-	struct list_head mnt_child;
-	struct list_head mnt_instance;
-	const char *mnt_devname;
-	struct list_head mnt_list;
-}
-
 static int      mymounts_show(struct seq_file *m, void *v)
 {
 	struct mnt_namespace	*ns = current->nsproxy->mnt_ns;
 	struct mount		*mnt;
 
-	pr_info("Mount namespace: %px\n", ns);
 
 	list_for_each_entry(mnt, &ns->list, mnt_list) {
 		struct vfsmount	*vfsmnt = &mnt->mnt;
@@ -49,13 +37,6 @@ static int      mymounts_show(struct seq_file *m, void *v)
 			return -ENOMEM;
 
 		path = d_path(&mnt_path, buf, PAGE_SIZE);
-
-		pr_info("Mount entry:\n");
-		pr_info("  Devname: %s\n", mnt->mnt_devname);
-		pr_info("  Path   : %s\n", path);
-		pr_info("  Root dentry: %px\n", root);
-		pr_info("  Mount addr : %px\n", mnt);
-
 		kfree(buf);
 	}
 	return 0;
