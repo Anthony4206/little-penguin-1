@@ -21,8 +21,7 @@ static int      mymounts_show(struct seq_file *m, void *v)
 	struct mnt_namespace	*ns = current->nsproxy->mnt_ns;
 	struct mount		*mnt;
 
-
-	list_for_each_entry(mnt, &ns->list, mnt_list) {
+	list_for_each_entry(mnt, &ns->list, mnt_list) {		
 		struct vfsmount	*vfsmnt = &mnt->mnt;
 		struct dentry	*root = vfsmnt->mnt_root;
 		struct path	mnt_path = {
@@ -30,13 +29,26 @@ static int      mymounts_show(struct seq_file *m, void *v)
 			.dentry = root
 		};
 
-		char 	*buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
-		char	*path;
+		char 		*buf;
+		const char	*devname;
+		char		*path;
 
+		buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
 		if (!buf)
 			return -ENOMEM;
 
+		if (mnt->mnt_devname)
+			devname = mnt->mnt_devname;
+		else
+			devname = "unknown";
+
 		path = d_path(&mnt_path, buf, PAGE_SIZE);
+		
+		if (strlen(devname) >= 8)
+			seq_printf(m, "%s\t%s\n", devname, path);
+		else
+			seq_printf(m, "%s\t\t%s\n", devname, path);
+		
 		kfree(buf);
 	}
 	return 0;
