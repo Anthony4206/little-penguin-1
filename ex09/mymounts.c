@@ -16,41 +16,51 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("alevasse");
 MODULE_DESCRIPTION("Get My Mounts!");
 
-static int      mymounts_show(struct seq_file *m, void *v)
+static void mymounts_format_line(struct seq_file *m,
+				 struct mount *mnt,
+				 struct path *mnt_path,
+				 char *buf)
 {
-	struct mnt_namespace	*ns = current->nsproxy->mnt_ns;
-	struct mount		*mnt;
+	const char *devname = (mnt->mnt_devname && mnt->mnt_devname[0] != '\0')
+				? mnt->mnt_devname
+				: "unknown";
 
-	list_for_each_entry(mnt, &ns->list, mnt_list) {		
-		struct vfsmount	*vfsmnt = &mnt->mnt;
-		struct dentry	*root = vfsmnt->mnt_root;
-		struct path	mnt_path = {
-			.mnt = vfsmnt,
-			.dentry = root
-		};
+	char *path = d_path(mnt_path, buf, PAGE_SIZE);
+	if (IS_ERR(path))
+		return;
 
-		char 		*buf;
-		const char	*devname;
-		char		*path;
+	if (strlen(devname) >= 8)
+		seq_printf(m, "%s\t%s\n", devname, path);
+	else
+		seq_printf(m, "%s\t\t%s\n", devname, path);
+}
 
-		buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
-		if (!buf)
-			return -ENOMEM;
+static void mymounts_print_entry(struct seq_file *m, struct mount *mnt)
+{
+	struct vfsmount *vfsmnt = &mnt->mnt;
+	struct dentry *root = vfsmnt->mnt_root;
+	struct path mnt_path = {
+		.mnt = vfsmnt,
+		.dentry = root
+	};
 
-		if (mnt->mnt_devname)
-			devname = mnt->mnt_devname;
-		else
-			devname = "unknown";
+	char *buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
+	if (!buf)
+		return;
 
-		path = d_path(&mnt_path, buf, PAGE_SIZE);
-		
-		if (strlen(devname) >= 8)
-			seq_printf(m, "%s\t%s\n", devname, path);
-		else
-			seq_printf(m, "%s\t\t%s\n", devname, path);
-		
-		kfree(buf);
-	}
+	mymounts_format_line(m, mnt, &mnt_path, buf);
+
+	kfree(buf);
+}
+
+static int mymounts_show(struct seq_file *m, void *v)
+{
+	struct mnt_namespace *ns = current->nsproxy->mnt_ns;
+	struct mount *mnt;
+
+	list_for_each_entry(mnt, &ns->list, mnt_list)
+		mymounts_print_entry(m, mnt);
+
 	return 0;
 }
 
